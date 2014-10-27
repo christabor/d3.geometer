@@ -13,9 +13,6 @@ compiled source #
 *.class
 *.dll
 assets/build/
-/**/*.min.css
-/**/*.min.js
-/**/*.map.min.css
 *.exe
 *.o
 *.so
