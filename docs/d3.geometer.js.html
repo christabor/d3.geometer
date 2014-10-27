@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: d3.geometer.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: d3.geometer.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+* D3 Geometer - a utility library for d3 that allows drawing
+* of geometric primitives, labels, connections and more.
+* Uses semantic versioning. http://semver.org/.
+* Licensed under MIT.
+
+* @copyright Copyright (c) Chris Tabor. 2014 All rights reserved.
+* @license MIT
+* @author Chris Tabor
+
+**/
+
+/**
+ * @namespace d3_geometer
+ */
+var d3_geometer = {
+    /** @version 1.0.0 */
+    'version': '1.0.0'
+};
+
+/**
+ * @namespace d3_geometer.utils
+ */
+d3_geometer.utils = {};
+
+/**
+* Converts degrees to radians.
+* @param {Number} degree - the degrees to convert - up to 360
+* @returns {Number}
+*/
+d3_geometer.utils.toRadian = function(deg) {
+    if(deg > 360) deg = 360;
+    if(isNaN(deg)) return deg;
+    return deg * (Math.PI / 180);
+};
+
+/**
+* Calculates the sum of interior angles of a given number of sides
+* @param {Number} sides - number of sides to calculate from.
+* @returns {Number}
+*/
+d3_geometer.utils.calculateAngleSum = function(sides) {
+    // http://www.regentsprep.org/Regents/math/geometry/GG3/LPoly1.htm
+    return 180 * (sides - 2);
+};
+
+/**
+* Calculates the angle of a given side,
+* given a number of equal sides.
+* @param {Number} sides - number of sides to calculate.
+* @param {Boolean} round - whether or not to round the calculation.
+* @returns {Number}
+*/
+d3_geometer.utils.calculateAngles = function(sides, round) {
+    var deg = d3_geometer.utils.calculateAngleSum(sides) / sides;
+    return round ? Math.round(deg) : deg;
+};
+
+/**
+* Generates a visual protractor to use in angle measurement
+* and interactive contexts
+* @constructor
+* @param {Object} group - d3 data selection.
+* @param {Number} size - size of protractor.
+* @returns {Object} - public rotation method and reference to protractor selection.
+*/
+d3_geometer.Protractor = function(group, size) {
+    var SIZE                    = size || 200;
+    var end_angle               = d3_geometer.utils.toRadian(180);
+    var drag                    = d3.behavior.drag().on('drag', _move);
+    var BAR_THICKNESS           = 1;
+    var HIGHLIGHT_BAR_THICKNESS = 4;
+    var protractor              = group.attr('id', 'protractor').call(drag);
+    var angle                   = 0; // protractor angle -- part of interactivity.
+    var arc_bottom;
+    var arc_bg;
+
+    arc_bg = d3.svg.arc()
+    .innerRadius(20)
+    .outerRadius(SIZE)
+    .startAngle(0)
+    .endAngle(end_angle);
+
+    arc_bottom = d3.svg.arc()
+    .innerRadius(10)
+    .outerRadius(20)
+    .startAngle(0)
+    .endAngle(end_angle);
+
+    function _move() {
+        var trans = 'translate(' + d3.event.x + ',' + d3.event.y + ')';
+        d3.select(this).attr('transform', trans);
+    }
+
+    function _updateAngle(e) {
+        var key = d3.event.keyCode;
+        // reset angle
+        if(angle > 360) {
+            angle = 0;
+        }
+        // up key
+        if(key === 38) {
+            angle -= 1;
+        // down key
+        } else if(key === 40) {
+            angle += 1;
+        }
+        // recalculate
+        rotate();
+    }
+
+    /**
+    * Updates the angle of the protractor based on
+    * the current value of the angle property
+    */
+    function rotate() {
+        var trans = group.attr('transform');
+        var ang = ',rotate(' + Math.abs(angle) + ')';
+        // trans = trans.replace(/,rotate\(+[0-9]+\)/g, '');
+        // trans += ang;
+        // protractor.attr('transform', trans);
+    }
+    protractor.rotate = rotate;
+
+    /**
+    * Sets angle and rotates
+    * @param {Number} ang - the angle to set
+    * @returns none
+    */
+    function updateAngle(ang) {
+        angle = ang;
+        rotate();
+    }
+    protractor.updateAngle = updateAngle;
+
+    // drag bg
+    protractor
+    .append('path')
+    .classed('protractor-bg', true)
+    .attr('fill', 'white')
+    .attr('opacity', 0.3)
+    .attr('stroke', 'black')
+    .attr('stroke-width', HIGHLIGHT_BAR_THICKNESS / 2)
+    .attr('d', arc_bg);
+
+    // 0, 180 degree line -----
+    protractor
+    .selectAll('.protractor-angle-0')
+    .data(d3.range(1))
+    .enter()
+    .append('rect')
+    .classed('protractor-angle-0', true)
+    .attr('fill', 'black')
+    .attr('width', HIGHLIGHT_BAR_THICKNESS)
+    .attr('height', SIZE * 2)
+    .attr('y', -SIZE)
+    .attr('x', -HIGHLIGHT_BAR_THICKNESS / 2);
+
+    // 90 degree line -----
+    protractor
+    .selectAll('.protractor-angle-90')
+    .data(d3.range(89, 90))
+    .enter()
+    .append('rect')
+    .classed('protractor-angle-90', true)
+    .attr('fill', 'red')
+    .attr('width', SIZE / 1.4)
+    .attr('height', HIGHLIGHT_BAR_THICKNESS)
+    .attr('y', -HIGHLIGHT_BAR_THICKNESS / 2)
+    .attr('x', 0);
+
+    // all angles -----
+    protractor
+    .selectAll('.protractor-angle')
+    .data(d3.range(1, 180))
+    .enter()
+    .append('rect')
+    .classed('protractor-angle', true)
+    .attr('fill', function(d){return d === 90 ? 'red' : 'black';})
+    .attr('width', BAR_THICKNESS)
+    .attr('opacity', 0.6)
+    .attr('height', function(d){
+        if(d % 10 === 0) {
+            if(d === 90) {
+                return SIZE / 6;
+            }
+            return SIZE;
+        } else if(d % 5 === 0) {
+            return SIZE / 6;
+        }
+        return SIZE / 14;
+    })
+    .attr('y', -SIZE)
+    .attr('transform', function(d){return 'rotate(' + d + ')';});
+
+    // bottom arc overlay
+    protractor
+    .append('path')
+    .classed('protractor-arc-bottom', true)
+    .attr('fill', 'black')
+    .attr('stroke-width', 0)
+    .attr('stroke', 'none')
+    .attr('d', arc_bottom);
+
+    // text labels - TOP -----
+    protractor
+    .selectAll('.protractor-text-top')
+    .data(d3.range(19)) // 0 + 18 * 10 = 180
+    .enter()
+    .append('text')
+    .classed('protractor-text-top', true)
+    .attr('fill', 'black')
+    .attr('text-anchor', 'middle')
+    .attr('x', 0)
+    .attr('y', -SIZE - 8)
+    .attr('font-size', function(d){return d === 90 ? 30 : 15;})
+    .attr('transform', function(d){return 'rotate(' + (d * 10)+ ')';})
+    .text(function(d){return d * 10;});
+
+    // text labels - BOTTOM -----
+    protractor
+    .selectAll('.protractor-text-bottom')
+    .data(d3.range(1, 18)) // 0 + 18 * 10 = 180
+    .enter()
+    .append('text')
+    .classed('protractor-text-bottom', true)
+    .attr('fill', 'black')
+    .attr('text-anchor', 'middle')
+    .attr('x', 0)
+    .attr('y', -SIZE / 1.3)
+    .attr('font-size', 11)
+    .attr('transform', function(d){return 'rotate(' + (d * 10)+ ')';})
+    .text(function(d){return d !== 90 ? 180 - d * 10 : '';});
+
+    d3.select('body').on('keydown', _updateAngle);
+    // trigger update angle first time, so user set angle is rendered.
+    rotate();
+
+    return protractor;
+};
+
+/**
+* Generates a coordinate space for overlaying elements
+* @constructor
+* @param {Object} group - A d3 group selection.
+* @param {Object} dims - A dimensions object with (width, height) keys.
+* @param {Number} max_coords - Max number of coordinate spaces per axis.
+*/
+d3_geometer.CoordSpace = function(group, dims, max_coords) {
+    var PADDING        = 10;
+    var LINE_THICKNESS = 1;
+    var x_scale        = null;
+    var y_scale        = null;
+    var x_axis         = null;
+    var y_axis         = null;
+    var coords         = d3.range(-max_coords, max_coords + 1);
+
+    x_scale = d3.scale.linear()
+    .domain([d3.min(coords), d3.max(coords)])
+    .range([PADDING, dims.width - PADDING]);
+
+    y_scale = d3.scale.linear()
+    .domain([d3.min(coords), d3.max(coords)])
+    .range([dims.height - PADDING, PADDING]);
+
+    x_axis = d3.svg.axis()
+    .tickValues(coords)
+    .scale(x_scale)
+    .orient('bottom');
+
+    y_axis = d3.svg.axis()
+    .tickValues(coords)
+    .scale(y_scale)
+    .orient('left');
+
+    // add x-axis
+    group.append('g')
+    .attr('transform', 'translate(0,' + dims.height / 2 + ')')
+    .attr('id', 'xCoords').call(x_axis);
+
+    // add y-axis
+    group.append('g')
+    .attr('transform', 'translate(' + dims.width / 2 + ', 0)')
+    .attr('id', 'yCoords').call(y_axis);
+
+    // add bg lines
+    group.append('g').attr('id', 'yCoordsLines')
+    .selectAll('.ycoord-line')
+    .data(coords)
+    .enter()
+    .append('rect')
+    .attr('opacity', function(d){
+        return d === 0 ? 1 : 0.1;
+    })
+    .attr('y', dims.width / 2)
+    .attr('width', function(d){
+        return d === 0 ? LINE_THICKNESS * 3 : LINE_THICKNESS;
+    })
+    .attr('height', dims.height)
+    .attr('x', x_scale)
+    .attr('y', 0);
+
+    group.append('g').attr('id', 'xCoordsLines')
+    .selectAll('.xcoord-line')
+    .data(coords)
+    .enter()
+    .append('rect')
+    .attr('y', dims.height / 2)
+    .attr('opacity', function(d){
+        return d === 0 ? 1 : 0.1;
+    })
+    .attr('width', dims.width)
+    .attr('height', function(d){
+        return d === 0 ? LINE_THICKNESS * 3 : LINE_THICKNESS;
+    })
+    .attr('x', 0)
+    .attr('y', y_scale);
+
+    // hide domain paths
+    group.select('#xCoords')
+    .select('.domain').style('display', 'none');
+
+    group.select('#yCoords')
+    .select('.domain').style('display', 'none');
+};
+
+/**
+* Represents a polygon of n sides. Always returns the nGon selection which mimics
+* the chainable d3 style interface.
+* @constructor
+* @param {Object} group - A d3 group selection.
+*/
+d3_geometer.NGon = function(group) {
+    if(!d3) return console.error('d3 library not found :sadface:');
+    var element      = null;
+    var _radius      = null;
+    var _sides       = null;
+    var _coords      = null;
+    var _connections = [];
+    var GLOBAL_CLASS = 'd3_geometer';
+    var TAU          = Math.PI * 2;
+    var STROKE       = '#b66d48';
+    var FILL         = '#f4eae5';
+    var STROKE_WIDTH = 3;
+    var DOT_SIZE     = 5;
+    var RADIUS       = 6;
+    var OFFSET       = 50;
+    var DASHARRAY    = 5;
+    var ARC_I_RADIUS = 10;
+    var ARC_O_RADIUS = RADIUS * 4;
+    var ANG_OPACITY  = 0.8;
+    var ANG_STROKE   = '#689452';
+    var ANG_FILL     = '#acf287';
+    var line         = d3.svg.line()
+    .x(function(d){return d.x;})
+    .y(function(d){return d.y;});
+
+    // A single source to set up parent groups
+    // for each type of element.
+    function _setupGroups() {
+        var classes = [
+            'ngon-labels',
+            'ngon-dash-edges',
+            'ngon-angles',
+            'ngon-vertices',
+            'ngon-right-angles'
+        ];
+
+        for(var i = 0, len = classes.length; i &lt; len; i ++) {
+            group.append('g')
+            .attr('class', [GLOBAL_CLASS, classes[i]].join(' '));
+        }
+    }
+
+    /**
+    * Inner "parent" function that is always returned
+    * in each method, which allows for chaining.
+    * @param {Number} radius - Size of entire shape
+    * - calculated using the unit circle
+    * @param {Number} sides - Number of sides.
+    */
+    function _nGon(radius, sides) {
+        group   = group || d3.select('svg').append('g');
+        // expose values
+        _radius = radius;
+        _sides  = sides;
+        _coords = _nGon.getCoords(radius, sides);
+        // Initialize element for later reference
+        // This is important!
+        element = group.selectAll('.ngon')
+        .data([_coords])
+        .enter()
+        .append('path')
+        .attr('stroke-width', STROKE_WIDTH)
+        .attr('stroke', STROKE)
+        .attr('fill', FILL)
+        .attr('opacity', 1)
+        .attr('d', function(d){return line(d) + 'Z';});
+        _setupGroups();
+        return _nGon;
+    }
+
+    /**
+    * Move the entire nGon.
+    * @param {Number} x - the x position to move to
+    * @param {Number} y - the y position to move to
+    * @returns {Object} - nGon selection
+    */
+    function move(x, y) {
+        var trans = 'translate(' + [x, y].join(', ') + ')';
+        group.attr('transform', trans);
+        return _nGon;
+    }
+    _nGon.move = move;
+
+    /**
+    * Rotate a given element.
+    * @param {Number} deg - the amount, in degrees, to rotate by
+    * @param {String} el - the d3 selector (class, tag, etc..) to rotate.
+    * @returns {Object} - nGon selection
+    */
+    function rotate(deg, el) {
+        group.select(el)
+        .attr('transform', 'rotate(' + deg + ')');
+        return _nGon;
+    }
+    _nGon.rotate = rotate;
+
+    function _destroy() {
+        element.remove();
+        // One reason for keeping all elements
+        // in a group is that it makes cleanup easier.
+        group.selectAll('g').remove();
+    }
+    _nGon._destroy = _destroy;
+
+    /**
+     * Calculates the sum of all interior angles.
+     * @returns {Number} result - the result of calculating all interior angles
+     */
+     function sumTotalInteriorAngles() {
+        var res = 0;
+        var deg = d3_geometer.utils.calculateAngles(_sides, true);
+        d3.range(_sides).map(function(d){
+            return res += deg;
+        });
+        return res;
+    }
+    _nGon.sumTotalInteriorAngles = sumTotalInteriorAngles;
+
+    /**
+     * Generate the coordinates for
+     * each point based on number of sides of the nGon.
+     * @param {Number} radius - Size of entire shape
+     * - calculated using the unit circle
+     * @param {Number} sides - Number of sides.
+     * returns {Array} - list of objects with
+     * coordinates and label of each vertex
+     */
+     function getCoords(radius, sides) {
+        return d3.range(sides).map(function(d){
+            var cx           = 0;  // center x
+            var cy           = 0;  // center y
+            var start_angle  = 0;
+            var center_angle = TAU / sides;
+            var curr_angle   = start_angle + (d * center_angle);
+            var vx           = Math.round(cx + radius * Math.cos(curr_angle));
+            var vy           = Math.round(cy - radius * Math.sin(curr_angle));
+            return {
+                'label': 'L' + d,
+                'x': vx,
+                'y': vy
+            };
+        });
+    }
+    _nGon.getCoords = getCoords;
+
+    /**
+    * Draw a custom label, wherever.
+    * @param {String} text - the label text.
+    * @param {Number} x - x position
+    * @param {Number} y - y position
+    * @returns {Object} - nGon selection
+    */
+    function label(text, x, y) {
+        group.select('.ngon-labels')
+        .append('text')
+        .classed('custom-label', true)
+        .text(text)
+        .attr('x', x || 0)
+        .attr('y', y || 0);
+        return _nGon;
+    }
+    _nGon.label = label;
+
+    /**
+    * Draws labels for all vertices on the nGon.
+    * @returns {Object} - nGon selection
+    */
+    function drawLabels() {
+        // Draw some labels on the vertices.
+        group.select('.ngon-labels')
+        .selectAll('.label')
+        .data(element.datum())
+        .enter()
+        .append('text')
+        .classed('label', true)
+        .text(function(d){return d.label;})
+        .attr('x', function(d){return d.x - (RADIUS + RADIUS / 2);})
+        .attr('y', function(d){return d.y - (RADIUS + RADIUS / 2);});
+        return _nGon;
+    }
+    _nGon.drawLabels = drawLabels;
+
+    /**
+    * Draws vertices for all points on the nGon.
+    * @returns {Object} - nGon selection
+    */
+    function drawVertices() {
+        // Draw vertices for each edge.
+        group.select('.ngon-vertices')
+        .selectAll('.vertex')
+        .data(element.datum())
+        .enter()
+        .append('circle')
+        .classed('vertex', true)
+        .attr('r', 0)
+        .attr('cx', function(d){return d.x;})
+        .attr('cy', function(d){return d.y;})
+        .transition()
+        .delay(function(d, i){return i * 100;})
+        .attr('r', RADIUS);
+        return _nGon;
+    }
+    _nGon.drawVertices = drawVertices;
+
+    /**
+    * Draws a right angle given coordinates.
+    * @param {Number} x - the x position
+    * @param {Number} y - the y position
+    * @returns {Object} - nGon selection
+    */
+    function drawRightAngle(x, y) {
+        group.select('.ngon-right-angles')
+        .append('rect')
+        .attr('class', 'right-angle')
+        .attr('x', x)
+        .attr('y', y)
+        .attr('stroke-width', STROKE_WIDTH / 2)
+        .attr('stroke', ANG_STROKE)
+        .attr('fill', ANG_FILL)
+        .attr('opacity', ANG_OPACITY)
+        .attr('width', RADIUS * 3)
+        .attr('height', RADIUS * 3);
+        return _nGon;
+    }
+    _nGon.drawRightAngle = drawRightAngle;
+
+    /**
+    * Draws any arbitrary angle given coordinates, degree and rotation.
+    * @param {Number} deg - the degree of rotation
+    * @param {Number} x - the x position
+    * @param {Number} y - the y position
+    * @param {Number} rotation - the angle
+    * @returns {Object} - nGon selection
+    */
+    function drawAngle(deg, x, y, rotation) {
+        if(!rotation) rotation = 0;
+        var _arc = d3.svg.arc()
+        .innerRadius(ARC_I_RADIUS)
+        .outerRadius(ARC_O_RADIUS)
+        .startAngle(0)
+        .endAngle(d3_geometer.utils.toRadian(deg));
+
+        group.select('.ngon-angles')
+        .append('g')
+        .attr('transform', 'translate(' + x + ',' + y +'), rotate(' + rotation + ')')
+        .append('path')
+        .attr('class', 'ngon-angle')
+        .attr('stroke-width', STROKE_WIDTH / 2)
+        .attr('stroke', ANG_STROKE)
+        .attr('fill', ANG_FILL)
+        .attr('opacity', ANG_OPACITY)
+        .attr('d', _arc);
+
+        // add label
+        group.select('.ngon-angles')
+        .append('text')
+        .classed('ngon-angle-text', true)
+        .attr('x', x + 5)
+        .attr('y', y + 20)
+        .attr('fill', 'black')
+        .attr('font-size', 10)
+        .text(Math.abs(deg) + '°');
+        return _nGon;
+    }
+    _nGon.drawAngle = drawAngle;
+
+    /**
+    * Uses util function to get all interior angles
+    * on the outer perimeter and then draws it for each vertex
+    * @throws Error
+    * @returns {Object} - nGon selection
+    */
+    function drawPerimeterInteriorAngles() {
+        var deg = d3_geometer.utils.calculateAngles(_sides, true);
+        var vertices = d3.select('.ngon-vertices').selectAll('.vertex');
+        var angle_increment = 360 / _sides;
+        if(!vertices) throw new Error('Must apply vertices before angles are calculated.');
+        vertices.each(function(v, k){
+            // The angle arc may be the same length for all vertices,
+            // but the rotation for each one is different, and must be
+            // calculated by getting the standard inverse angle (360/sides)
+            // as well as the offset, calculated for each vertex, in a series
+            // based on the vertex order, starting at 90 and going in increments
+            // of angle_increment.
+            var rotation_offset = k + (_sides / 2 - 0.5);
+            var aor = -angle_increment * rotation_offset;
+            _nGon.drawAngle(deg, v.x, v.y, aor);
+        });
+        return _nGon;
+    }
+    _nGon.drawPerimeterInteriorAngles = drawPerimeterInteriorAngles;
+
+    /**
+    * Calculates all positions for each
+    * vertex to connect to - offset by one,
+    * since adjacent vertices are already connected,
+    * @param {Number} modulo - A modulo to allow custom numerical offsets.
+    * @returns {Object} - nGon selection
+    */
+    function calculateEdgeOffsets(modulo) {
+        var datum = element.datum();
+        var len   = datum.length;
+        if(len &lt; 3) return;
+
+        function _push(inner, sub_index, index) {
+            inner.push({'x': datum[index].x, 'y': datum[index].y, 'label': 'C' + index});
+            inner.push({'x': datum[len - sub_index].x, 'y': datum[len - sub_index].y, 'label': 'C' + (len - sub_index)});
+        }
+
+        // store connections state
+        _connections = d3.range(len).map(function(d, i){
+            var inner = [];
+            for(var j = 1; j &lt; len - 1; j++) {
+                if(modulo) {
+                    if(j % modulo === 0) {
+                        _push(inner, j, i);
+                    }
+                } else {
+                    _push(inner, j, i);
+                }
+            }
+            return inner;
+        });
+        return _nGon;
+    }
+    _nGon.calculateEdgeOffsets = calculateEdgeOffsets;
+
+    /**
+    * Simply draws the center vertex
+    * @param {Boolean} use_labels - Add a label to center point
+    * @returns {Object} - nGon selection
+    */
+    function drawCenterPoint(use_labels) {
+        group.select('.ngon-vertices')
+        .append('circle')
+        .attr('class', 'center-vertex')
+        .attr('r', 0)
+        .attr('cx', 0)
+        .attr('cy', 0)
+        .transition()
+        .delay(function(d, i){return i * 100;})
+        .attr('r', RADIUS);
+
+        if(use_labels) {
+            // Draw some labels on the vertices.
+            group.select('.ngon-labels')
+            .append('text')
+            .attr('class', 'center-vertex-label')
+            .text(function(d){return 'O1';})
+            .attr('x', RADIUS + RADIUS / 2)
+            .attr('y', RADIUS);
+        }
+        return _nGon;
+    }
+    _nGon.drawCenterPoint = drawCenterPoint;
+
+    /**
+    * Draws edges directly adjacent + 1 to each vertex.
+    * see calculateEdgeOffsets for details.
+    * @param {Array} connections - A list of custom connections
+    * -must be an array of objects with x and y accessors
+    * @returns {Object} - nGon selection
+    */
+    function drawNearAdjacentEdges(connections, modulo) {
+        if(!connections) {
+            _nGon.calculateEdgeOffsets(modulo);
+            connections = _connections;
+        }
+        group.select('.ngon-dash-edges')
+        .selectAll('.dashed')
+        .data(connections)
+        .enter()
+        .append('path')
+        .attr('stroke-width', STROKE_WIDTH / 2)
+        .attr('stroke', STROKE)
+        .attr('fill', 'none')
+        .attr('d', line);
+        return _nGon;
+    }
+    _nGon.drawNearAdjacentEdges = drawNearAdjacentEdges;
+
+    return _nGon;
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Index</a></h2><h3>Classes</h3><ul><li><a href="d3_geometer.CoordSpace.html">CoordSpace</a></li><li><a href="d3_geometer.NGon.html">NGon</a></li><li><a href="d3_geometer.Protractor.html">Protractor</a></li></ul><h3>Namespaces</h3><ul><li><a href="d3_geometer.html">d3_geometer</a></li><li><a href="d3_geometer.utils.html">utils</a></li></ul>
+</nav>
+
+<br clear="both">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-alpha10</a> on Sun Oct 26 2014 21:10:52 GMT-0700 (PDT)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

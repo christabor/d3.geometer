@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>D3.geometer examples</title>
+    <style>
+    body {
+        text-align: center;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+        font-family: sans-serif;
+        font-weight: 100;
+    }
+    h1,
+    h2,
+    p {
+        font-family: sans-serif;
+        font-weight: 100;
+        max-width: 900px;
+        margin: 0 auto;
+        display: block;
+        padding: 0.8em;
+    }
+    svg {
+        margin: 1em;
+        border:2px solid #ccc;
+    }
+    #protractor g:hover {
+        cursor: move;
+    }
+    @media handheld, screen and (max-width: 700px) {
+        body {
+            overflow-x: visible;
+        }
+        svg {
+            padding: 0;
+            margin: 0;
+        }
+    }
+    </style>
+</head>
+<body>
+    <h1>Examples</h1>
+    <p><strong>Styling:</strong> some default values are provided where necessary, but most colors and attributes can be styled as needed, and everything is namespaced appropriately within sub-group selections.</p>
+    <h2>Protractor</h2>
+    <div id="protractor"></div>
+    <h2>Coordinate space</h2>
+    <div id="coords"></div>
+    <h2>NGon</h2>
+    <div id="ngon"></div>
+    <h2>All together now!</h2>
+    <div id="sink"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.4.13/d3.min.js"></script>
+    <script src="../d3.geometer.js"></script>
+    <script src="examples.js"></script>
+</body>
+</html>
