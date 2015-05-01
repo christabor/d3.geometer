@@ -9,8 +9,6 @@ See [the docs](http://christabor.github.io/d3-geometer/docs/d3_geometer.html) fo
 
 ## Examples
 
-NGON
-
 ![ngon animation](examples/screenshots/ngon.gif)
 ![ngon animation](examples/screenshots/protractor.gif)
 
