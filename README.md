@@ -5,10 +5,10 @@ A utility library for d3js that allows drawing of geometric primitives, labels, 
 
 ## Documentation
 
-See [/docs/](these docs) for more.
+See [the docs](docs/d3_geometer.html) for more.
 
 ## Examples
 
 NGON
 
-![examples/screenshots/ngon.gif](ngon animation)
+![ngon animation](examples/screenshots/ngon.gif)
