@@ -12,3 +12,6 @@ See [the docs](http://christabor.github.io/d3-geometer/docs/d3_geometer.html) fo
 NGON
 
 ![ngon animation](examples/screenshots/ngon.gif)
+![ngon animation](examples/screenshots/protractor.gif)
+
+More can be [found here](http://christabor.github.io/d3-geometer/examples/)
