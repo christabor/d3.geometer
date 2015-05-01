@@ -5,7 +5,7 @@ A utility library for d3js that allows drawing of geometric primitives, labels, 
 
 ## Documentation
 
-See [the docs](docs/d3_geometer.html) for more.
+See [the docs](http://christabor.github.io/d3-geometer/docs/d3_geometer.html) for more.
 
 ## Examples
 
