@@ -13,3 +13,6 @@ See [the docs](http://christabor.github.io/d3-geometer/docs/d3_geometer.html) fo
 ![ngon animation](examples/screenshots/protractor.gif)
 
 More can be [found here](http://christabor.github.io/d3-geometer/examples/)
+
+### Support / donations
+![Donation badge](https://img.shields.io/gratipay/christabor.svg)
