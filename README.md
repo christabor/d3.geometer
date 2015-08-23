@@ -1,4 +1,4 @@
-[![MIT Badge](http://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/christabor/d3-geometer/master/LICENSE)
+[![MIT Badge](http://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/christabor/d3.geometer/master/LICENSE)
 ![Donation badge](https://img.shields.io/gratipay/christabor.svg)
 
 d3.geometer
@@ -8,7 +8,7 @@ A utility library for d3js that allows drawing of geometric primitives, labels, 
 
 ## Documentation
 
-See [the docs](http://christabor.github.io/d3-geometer/docs/d3_geometer.html) for more.
+See [the docs](http://christabor.github.io/d3.geometer/docs/d3_geometer.html) for more.
 
 ## Examples
 
