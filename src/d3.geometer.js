@@ -268,7 +268,7 @@ d3_geometer.CoordSpace = function(group, dims, max_coords) {
 
     if(is_d3_v4) {
         x_axis = d3.axisBottom(x_scale).tickValues(coords);
-        y_axis = d3.axisTop(y_scale).tickValues(coords)
+        y_axis = d3.axisLeft(y_scale).tickValues(coords)
     } else {
         x_axis = d3.svg.axis()
         .tickValues(coords)
