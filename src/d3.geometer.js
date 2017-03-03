@@ -17,6 +17,7 @@ var d3_geometer = {
     /** @version 1.0.0 */
     'version': '1.0.0'
 };
+var is_d3_v4 = d3.version.split('.')[0] === '4';
 
 /**
  * @namespace d3_geometer.utils
@@ -67,21 +68,22 @@ d3_geometer.utils.calculateAngles = function(sides, round) {
 d3_geometer.Protractor = function(group, size) {
     var SIZE                    = size || 200;
     var end_angle               = d3_geometer.utils.toRadian(180);
-    var drag                    = d3.behavior.drag().on('drag', _move);
+    var drag                    = is_d3_v4 ? d3.drag().on('drag', _move) : d3.behavior.drag().on('drag', _move);
     var BAR_THICKNESS           = 1;
     var HIGHLIGHT_BAR_THICKNESS = 4;
     var protractor              = group.attr('id', 'protractor').call(drag);
     var angle                   = 0; // protractor angle -- part of interactivity.
+    var svg_arc                 = is_d3_v4 ? d3.arc : d3.svg.arc;
     var arc_bottom;
     var arc_bg;
 
-    arc_bg = d3.svg.arc()
+    arc_bg = svg_arc()
     .innerRadius(20)
     .outerRadius(SIZE)
     .startAngle(0)
     .endAngle(end_angle);
 
-    arc_bottom = d3.svg.arc()
+    arc_bottom = svg_arc()
     .innerRadius(10)
     .outerRadius(20)
     .startAngle(0)
@@ -254,24 +256,29 @@ d3_geometer.CoordSpace = function(group, dims, max_coords) {
     var x_axis         = null;
     var y_axis         = null;
     var coords         = d3.range(-max_coords, max_coords + 1);
+    var scale_linear   = is_d3_v4 ? d3.scaleLinear : d3.scale.linear;
 
-    x_scale = d3.scale.linear()
+    x_scale = scale_linear()
     .domain([d3.min(coords), d3.max(coords)])
     .range([PADDING, dims.width - PADDING]);
 
-    y_scale = d3.scale.linear()
+    y_scale = scale_linear()
     .domain([d3.min(coords), d3.max(coords)])
     .range([dims.height - PADDING, PADDING]);
 
-    x_axis = d3.svg.axis()
-    .tickValues(coords)
-    .scale(x_scale)
-    .orient('bottom');
-
-    y_axis = d3.svg.axis()
-    .tickValues(coords)
-    .scale(y_scale)
-    .orient('left');
+    if(is_d3_v4) {
+        x_axis = d3.axisBottom(x_scale).tickValues(coords);
+        y_axis = d3.axisTop(y_scale).tickValues(coords)
+    } else {
+        x_axis = d3.svg.axis()
+        .tickValues(coords)
+        .scale(x_scale)
+        .orient('bottom');
+        y_axis = d3.svg.axis()
+        .tickValues(coords)
+        .scale(y_scale)
+        .orient('left');
+    }
 
     // add x-axis
     group.append('g')
@@ -351,7 +358,8 @@ d3_geometer.NGon = function(group) {
     var ANG_OPACITY  = 0.8;
     var ANG_STROKE   = '#689452';
     var ANG_FILL     = '#acf287';
-    var line         = d3.svg.line()
+    var svg_line     = is_d3_v4 ? d3.line : d3.svg.line;
+    var line         = svg_line()
     .x(function(d){return d.x;})
     .y(function(d){return d.y;});
 
@@ -566,7 +574,8 @@ d3_geometer.NGon = function(group) {
     */
     function drawAngle(deg, x, y, rotation) {
         if(!rotation) rotation = 0;
-        var _arc = d3.svg.arc()
+        var svg_arc = is_d3_v4 ? d3.arc : d3.svg.arc;
+        var _arc = svg_arc()
         .innerRadius(ARC_I_RADIUS)
         .outerRadius(ARC_O_RADIUS)
         .startAngle(0)
